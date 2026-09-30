@@ -1,0 +1,26 @@
+# Sample Slack messages for manual / integration testing
+# Paste these into a channel where the bot is present (and allowed by SLACK_CHANNEL_IDS if set).
+
+# --- Should create a Jira (bug / crash) ---
+[QA] Checkout: clicking "Pay" on Android 14 / app v2.3.1 spins forever. Saw in prod EU. No money taken. Steps: open cart, tap Pay, observe infinite spinner. Expected: redirect to confirmation. Actual: spinner never ends. Happens on Wi‑Fi and LTE.
+
+# --- Regression ---
+Regression in 2.4.0-rc1: saved filters on web dashboard reset after refresh. Worked in 2.3.9. Chrome 124, macOS. Impact: power users lose workflow.
+
+# --- Performance ---
+Performance: /api/reports?range=90d takes 40s and sometimes 504. Backend. Need profiling — feels like N+1 or missing index.
+
+# --- UI issue ---
+UI: modal footer buttons overlap on iPhone SE (small width). Settings > Notifications modal. Screenshot in thread.
+
+# --- Enhancement ---
+Enhancement: please add CSV export for audit log. Compliance asked; not blocking release but needed this quarter.
+
+# --- Should be IGNORED by the agent (casual / non-QA) ---
+Hey team, lunch at 12:30 today — who's in?
+
+Thanks everyone, great demo!
+
+# --- Thread-style (post parent first, then reply in thread with details) ---
+Parent: "Seeing crash on iOS payments"
+Reply in thread: "Repro: iOS 17.4, build 445. Tap saved card then Face ID — app dies. Crash log mentions SIGABRT in PaymentKit."

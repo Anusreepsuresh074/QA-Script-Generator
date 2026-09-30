@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QA Script Generator</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=12" />
+</head>
+<body>
+  <header>
+    <h1>QA Script Generator <span>AI workflow dashboard</span></h1>
+    <div class="status-pill">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Checking…</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section>
+        <h2>Configuration</h2>
+        <div class="card" id="configCard">
+          <div class="empty-state">Loading…</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Jira tickets</h2>
+        <div class="card">
+          <button type="button" class="btn-ghost" id="refreshTickets">Refresh</button>
+          <ul class="ticket-list" id="ticketList"></ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Generated outputs</h2>
+        <div class="card">
+          <button type="button" class="btn-ghost" id="refreshOutputs">Refresh</button>
+          <ul class="output-list" id="outputList"></ul>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <div class="workflow-steps">
+        <div class="step" id="step1">
+          <span class="step-num">1</span>
+          <span class="step-label">Input &amp; Processing</span>
+        </div>
+        <div class="step" id="step2">
+          <span class="step-num">2</span>
+          <span class="step-label">Scenarios</span>
+        </div>
+        <div class="step" id="step3">
+          <span class="step-num">3</span>
+          <span class="step-label">Pytest Scripts</span>
+        </div>
+      </div>
+
+      <section>
+        <h2>Run workflow</h2>
+        <div class="card">
+          <label for="ticketId">Jira ticket ID</label>
+          <input type="text" id="ticketId" placeholder="e.g. QA-1" />
+
+          <label for="apiType">API type</label>
+          <select id="apiType">
+            <option value="rest">REST / OpenAPI (Swagger)</option>
+            <option value="graphql">GraphQL</option>
+            <option value="soap">SOAP / WSDL</option>
+            <option value="grpc">gRPC / Protocol Buffers</option>
+            <option value="websocket">WebSocket / AsyncAPI</option>
+          </select>
+
+          <label for="specUrl" id="specUrlLabel">Swagger / OpenAPI URL (optional)</label>
+          <input type="url" id="specUrl" placeholder="https://example.com/openapi.json" />
+
+          <label for="framework">Test framework (Phase 3)</label>
+          <select id="framework" title="Select the automation framework for generated scripts">
+            <option value="pytest">pytest (Python)</option>
+            <option value="robot">Robot Framework</option>
+            <option value="jest">Jest (JavaScript)</option>
+            <option value="postman">Postman / Newman (JSON collection)</option>
+          </select>
+
+          <label for="apiBaseUrl">API base URL for generated tests</label>
+          <input type="url" id="apiBaseUrl" placeholder="https://reqres.in/api" />
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="attachJira" checked />
+            <label for="attachJira" class="checkbox-label">Attach results to Jira ticket</label>
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="createPr" />
+            <label for="createPr" class="checkbox-label">
+              Create PR automatically after test run
+              <span class="hint">(leave off to review results first, then use “Raise PR” in Test run results — the “⚙ PR options” there apply to both)</span>
+            </label>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" id="runPhase1">Phase 1 only</button>
+            <button type="button" class="btn-secondary" id="runPhase2">Phase 1 + 2</button>
+            <button type="button" class="btn-primary" id="runFull">Full pipeline (1→2→3)</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Activity log</h2>
+        <div class="log-area" id="logArea"></div>
+      </section>
+
+      <section>
+        <h2>Results</h2>
+        <div class="results-grid">
+          <div class="panel" id="panelPhase1">
+            <div class="panel-header">Phase 1 — Processed ticket</div>
+            <div class="panel-body" id="resultPhase1">
+              <div class="empty-state">Run a workflow step to see results.</div>
+            </div>
+          </div>
+
+          <div class="panel" id="panelPhase2">
+            <div class="panel-header">Phase 2 — Test scenarios</div>
+            <div class="panel-body" id="resultPhase2">
+              <div class="empty-state">Scenarios will appear here.</div>
+            </div>
+          </div>
+
+          <div class="panel" id="panelPhase3">
+            <div class="panel-header">
+              <span>Phase 3 — Pytest scripts</span>
+              <select id="scriptFileSelect" class="hidden script-file-select" title="Select generated script file to preview"></select>
+            </div>
+            <div class="panel-body" id="resultPhase3">
+              <div class="empty-state">Generated scripts will appear here.</div>
+            </div>
+          </div>
+
+          <div class="panel" id="panelTests">
+            <div class="panel-header panel-header-actions">
+              <span>Test run results</span>
+              <div class="panel-actions">
+                <button type="button" class="btn-ghost btn-sm" id="generateReportBtn" disabled title="Select a ticket with generated tests">Generate report</button>
+                <select id="reportFormatSelect" class="btn-sm" disabled>
+                  <option value="html">HTML</option>
+                  <option value="json">JSON</option>
+                  <option value="csv">CSV</option>
+                  <option value="xlsx">Excel</option>
+                </select>
+                <button type="button" class="btn-ghost btn-sm" id="downloadReportBtn" disabled>Download report</button>
+                <button type="button" class="btn-ghost btn-sm" id="prOptionsToggle" aria-expanded="false" title="Branch, grouping, target path and repo awareness">⚙ PR options</button>
+                <button type="button" class="btn-ghost btn-sm" id="raisePrBtn" disabled title="Select a ticket with generated tests">🔀 Raise PR</button>
+              </div>
+            </div>
+            <div class="pr-options" id="prOptions" hidden>
+              <div class="pr-options-grid">
+                <label class="pr-field">
+                  <span>Group into</span>
+                  <select id="prGrouping" title="How the selected tests are split into pull requests">
+                    <option value="single">One combined PR</option>
+                    <option value="per_ticket">One PR per ticket</option>
+                    <option value="per_test">One PR per test</option>
+                  </select>
+                </label>
+                <label class="pr-field">
+                  <span>Tests to include</span>
+                  <select id="prScopeSelect" title="Which tests the pull request carries">
+                    <option value="all">All generated tests</option>
+                    <option value="passed">Only tests that passed</option>
+                  </select>
+                </label>
+                <label class="pr-field">
+                  <span>Branch name</span>
+                  <input type="text" id="prBranch" placeholder="auto" spellcheck="false"
+                         title="Leave blank for automation/&lt;TICKET&gt;. Illegal git-ref characters are replaced with dashes." />
+                </label>
+                <label class="pr-field">
+                  <span>Path in target repo</span>
+                  <input type="text" id="prTargetPath" placeholder="auto" spellcheck="false"
+                         title="Directory the generated tests are written to. Leave blank to use the test root found in the repo." />
+                </label>
+                <label class="pr-field pr-field-wide">
+                  <span>PR title</span>
+                  <input type="text" id="prTitle" placeholder="auto" />
+                </label>
+              </div>
+
+              <div class="pr-checks">
+                <div class="checkbox-row">
+                  <input type="checkbox" id="prAnalyzeRepo" checked />
+                  <label for="prAnalyzeRepo" class="checkbox-label">
+                    Read the target repo first
+                    <span class="hint">learn its test layout, naming, conftest fixtures and pytest config, then place files where its own tests live</span>
+                  </label>
+                </div>
+                <div class="checkbox-row">
+                  <input type="checkbox" id="prAdaptTests" />
+                  <label for="prAdaptTests" class="checkbox-label">
+                    Adapt tests to the repo's conventions
+                    <span class="hint">rewrite the generated modules to reuse existing fixtures, helpers and style — a rewrite that would drop a test is discarded and the file ships as generated</span>
+                  </label>
+                </div>
+              </div>
+
+              <fieldset class="pr-tickets">
+                <legend>Tickets in this PR <span class="hint">(tick more than one to combine them — applies to “Raise PR”; an automatic post-run PR only covers the ticket that ran)</span></legend>
+                <div class="pr-ticket-list" id="prTicketList">
+                  <span class="hint">No generated outputs yet.</span>
+                </div>
+              </fieldset>
+
+              <div class="pr-options-row">
+                <button type="button" class="btn-ghost btn-sm" id="inspectRepoBtn">🔍 Inspect target repo</button>
+                <span class="hint" id="prRepoHint"></span>
+              </div>
+              <div class="pr-conventions" id="prConventions" hidden></div>
+              <div class="pr-plan" id="prPlan"></div>
+            </div>
+            <div class="panel-body" id="resultTests">
+              <div class="empty-state">Run tests or generate a report from “Generated outputs” to see results.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/js/dashboard.js?v=12"></script>
+</body>
+</html>

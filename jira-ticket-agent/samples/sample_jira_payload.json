@@ -1,0 +1,124 @@
+{
+  "description": "Example Jira Cloud REST API v3 POST /rest/api/3/issue payload produced by this agent (fields vary by project).",
+  "endpoint": "POST {JIRA_BASE_URL}/rest/api/3/issue",
+  "payload": {
+    "fields": {
+      "project": { "key": "QA" },
+      "summary": "[Android] Checkout Pay button hangs with infinite spinner",
+      "issuetype": { "name": "Bug" },
+      "priority": { "name": "High" },
+      "labels": [
+        "qa-agent",
+        "bug",
+        "module-checkout",
+        "platform-android",
+        "customer-impact"
+      ],
+      "assignee": { "accountId": "712020:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Environment" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Android 14, app v2.3.1, production EU, Wi‑Fi and LTE"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Steps to Reproduce" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "1. Open cart\n2. Tap Pay\n3. Observe infinite spinner"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Expected Result" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "User is redirected to payment confirmation; funds captured or clear error shown."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Actual Result" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Infinite spinner; no confirmation; no charge observed."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Impact" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Blocks checkout on Android in prod; direct revenue impact until resolved."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Priority / Severity (AI-suggested)" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Priority: High\nSeverity: Critical"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Module / Platform" }]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Module: Checkout\nPlatform: android"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

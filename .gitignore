@@ -1,0 +1,10 @@
+.env
+output/
+.pytest_cache
+.venv
+venv/
+__pycache__
+__init__.py
+.__pycache__
+*/__pycache__/
+reports/
