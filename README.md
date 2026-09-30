@@ -1,61 +1,48 @@
-# QA Script Generator – Input & Data Processing Module
+# QA Script Generator
 
-AI-powered internal QA automation tool that analyses Jira tickets and Swagger/OpenAPI documentation to produce a normalised JSON payload for downstream LLM-based Pytest script generation.
+[![Tests](https://github.com/Anusreepsuresh074/QA-Script-Generator/actions/workflows/tests.yml/badge.svg)](https://github.com/Anusreepsuresh074/QA-Script-Generator/actions/workflows/tests.yml)
 
-## Architecture
+An AI agent for QA: give it a Jira ticket and the API's spec, and it writes test scenarios and runnable test scripts for you to review.
 
-```
-POST /process-ticket
-        │
-        ▼
-┌──────────────────┐     ┌─────────────────────┐
-│   Jira Client    │────▶│  Ticket Processor    │
-│  (REST API v2)   │     │  + Criteria Extractor│
-└──────────────────┘     └─────────┬───────────┘
-                                   │
-┌──────────────────┐               │
-│  Swagger Parser  │───────────────┤
-│  (2.0 / OAS 3.x)│               │
-└──────────────────┘               ▼
-                          ┌────────────────┐
-                          │   API Mapper   │
-                          │ keyword / embed│
-                          └───────┬────────┘
-                                  │
-                                  ▼
-                        ProcessedDataSchema
-                        (normalised JSON)
-```
+A study project on AI agents for QA automation, built with two teammates. See [About](#about) for who built what.
 
-## Project Structure
+## What it does
+
+1. **Reads the ticket** from Jira and pulls out its acceptance criteria (regex and heuristics first, an LLM only if those find nothing).
+2. **Reads the API spec**: REST (Swagger 2 / OpenAPI 3), GraphQL (SDL or introspection), SOAP (WSDL), gRPC (`.proto`) or WebSocket (AsyncAPI). The type is detected from the URL or the content.
+3. **Maps each criterion to endpoints** by keyword overlap, embeddings (sentence-transformers) or LLM scoring.
+4. **Writes test scenarios** (positive, negative, edge) with an LLM, then filters out duplicates and weak ones.
+5. **Generates scripts** in **Pytest, Robot Framework, Jest or Postman** (Newman).
+6. **Runs them**, builds an Excel/HTML report, posts results back to the Jira ticket, and can **open a GitHub pull request** so a person reviews the tests before they are merged.
+
+Ollama is the main LLM and Groq is the fallback; calls are retried with `tenacity`. A web dashboard at `/` drives the whole flow.
 
 ```
-QA-Script-Generator/
-├── app/
-│   ├── config/settings.py        # Env-based configuration (Pydantic Settings)
-│   ├── models/schemas.py         # Pydantic request / response schemas
-│   ├── jira/
-│   │   ├── jira_client.py        # Low-level Jira REST client
-│   │   ├── ticket_processor.py   # Raw-issue → TicketSchema transformer
-│   │   └── criteria_extractor.py # Regex + heuristic AC extraction
-│   ├── swagger/
-│   │   └── swagger_parser.py     # Swagger 2 / OpenAPI 3 parser
-│   ├── mapper/
-│   │   └── api_mapper.py         # Keyword & embedding-based mapping
-│   ├── services/
-│   │   └── processing_service.py # End-to-end pipeline orchestrator
-│   ├── utils/
-│   │   ├── logger.py             # Centralised logging setup
-│   │   └── helpers.py            # Shared helpers (file loading, etc.)
-│   └── main.py                   # FastAPI application
-├── tests/
-│   ├── test_jira.py
-│   ├── test_swagger.py
-│   └── test_processor.py
-├── .env.example
-├── requirements.txt
-└── README.md
+Jira ticket ──► criteria extractor ──┐
+                                     ├──► API mapper ──► scenario generator ──► script generator ──► run + report ──► pull request
+API spec ────► parser factory ───────┘                    (LLM + filter)         (Pytest/Robot/Jest/Postman)          (human review)
 ```
+
+## Tests
+
+The tool itself is covered by **57 pytest tests** that run offline in CI, with no Jira, LLM or network access:
+
+| Area | What is checked |
+|---|---|
+| Spec parsers | API type detection from URL and content; each of the 5 parsers on a sample spec; bad input rejected |
+| Criteria extraction | bullets, numbered lists, sub-headings, fallback lists, noise filtering |
+| API mapping | criteria land on the right endpoint; every endpoint is scored |
+| Demo API | the mock Customers API returns 201 / 404 / 409 / 422 as its tickets describe |
+| Pipeline | a demo ticket plus the demo spec become the normalised payload, end to end |
+| Scenario quality | duplicate criteria and scenarios are dropped |
+
+```bash
+pytest -v
+```
+
+## What I learned from the offline demo
+
+With a small local model (qwen2.5 7B on a laptop CPU), the pipeline ran end to end but all 3 generated tests failed: each used an undefined variable, and one checked a `Location` header the API never sends (a hallucinated requirement). AI-written tests are a draft: run them straight away, trace every assertion back to the ticket or the spec, and review them in a pull request before they join a suite.
 
 ## Quick Start
 
@@ -87,7 +74,7 @@ Interactive docs at **http://localhost:8000/docs**.
 ### 4. Run tests
 
 ```bash
-pytest tests/ -v
+pytest -v
 ```
 
 ### 5. Try it offline (no Jira or cloud keys)
@@ -233,6 +220,6 @@ Uses `sentence-transformers` to compute cosine similarity between criteria text 
 
 ## About
 
-A learning project on AI agents for QA automation, built with two teammates ([@iszac01](https://github.com/iszac01), [@jenieraju](https://github.com/jenieraju)).
+A study project on AI agents for QA automation, built with two teammates ([@iszac01](https://github.com/iszac01), [@jenieraju](https://github.com/jenieraju)).
 
 My parts: multi-protocol parsers (GraphQL, SOAP, gRPC, WebSocket), the Robot Framework / Jest / Postman generators, the Slack → Jira ticket agent (`jira-ticket-agent/`), and the offline demo (`demo/`).

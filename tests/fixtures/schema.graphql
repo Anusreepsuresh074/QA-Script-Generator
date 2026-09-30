@@ -1,0 +1,18 @@
+# Book store schema
+type Book {
+  id: ID!
+  title: String!
+}
+
+type Query {
+  book(id: ID!): Book
+  books(limit: Int): [Book!]!
+}
+
+type Mutation {
+  addBook(title: String!): Book!
+}
+
+type Subscription {
+  bookAdded: Book!
+}

@@ -58,7 +58,7 @@ app = FastAPI(
     title="QA Script Generator",
     description=(
         "Processes Jira tickets and Swagger/OpenAPI specs, generates test scenarios, "
-        "and produces Pytest automation scripts for internal QA."
+        "and produces runnable test scripts (Pytest, Robot Framework, Jest, Postman)."
     ),
     version="1.2.0",
     lifespan=lifespan,

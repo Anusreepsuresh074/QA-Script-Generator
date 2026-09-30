@@ -1,0 +1,29 @@
+asyncapi: "2.6.0"
+info:
+  title: Chat API
+  version: "1.0.0"
+servers:
+  production:
+    url: ws://chat.example.com
+    protocol: ws
+channels:
+  chat/messages:
+    publish:
+      summary: Send a chat message
+      message:
+        name: ChatMessage
+        payload:
+          type: object
+          required: [text]
+          properties:
+            text:
+              type: string
+    subscribe:
+      summary: Receive chat messages
+      message:
+        name: ChatMessage
+        payload:
+          type: object
+          properties:
+            text:
+              type: string
